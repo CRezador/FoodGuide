@@ -42,3 +42,14 @@ yarn-error.log
 /boost.json
 /opencode.json
 /opencode.jsonc
+
+# Docker: overrides locais de cada máquina
+/compose.override.yaml
+/compose.override.yml
+/docker-compose.override.yml
+
+# Backups de .env e lixo de sistema operacional
+.env.*.bak
+.env.bak*
+.DS_Store
+Thumbs.db

@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Atalho para o Docker do FoodGuide. Uso: food <comando> [args]
+set -euo pipefail
+
+PROJECT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+COMPOSE=(docker compose --project-directory "$PROJECT_DIR" -f "$PROJECT_DIR/compose.yaml")
+
+# Sem terminal interativo (scripts, CI), o exec precisa de -T.
+TTY_FLAG=()
+[ -t 0 ] && [ -t 1 ] || TTY_FLAG=(-T)
+
+exec_app() { "${COMPOSE[@]}" exec "${TTY_FLAG[@]}" app "$@"; }
+
+case "${1:-help}" in
+    start)    shift; "${COMPOSE[@]}" up -d "$@" ;;
+    exit|stop) shift; "${COMPOSE[@]}" down "$@" ;;
+    restart)  shift; "${COMPOSE[@]}" restart "$@" ;;
+    build)    shift; "${COMPOSE[@]}" up -d --build "$@" ;;
+    ps|status) "${COMPOSE[@]}" ps ;;
+    logs)     shift; "${COMPOSE[@]}" logs -f "$@" ;;
+    php)      shift; exec_app php "$@" ;;
+    artisan|a) shift; exec_app php artisan "$@" ;;
+    composer) shift; exec_app composer "$@" ;;
+    test)     shift; exec_app php artisan test --compact "$@" ;;
+    pint)     shift; exec_app vendor/bin/pint "$@" ;;
+    shell|sh) exec_app sh ;;
+    mysql)    "${COMPOSE[@]}" exec mysql sh -c 'mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE"' ;;
+    help|*)
+        cat <<'HELP'
+Uso: food <comando>
+
+  start            sobe os containers
+  exit | stop      derruba os containers (o banco persiste)
+  restart [svc]    reinicia tudo ou um serviço (ex.: food restart queue)
+  build            reconstrói a imagem e sobe
+  ps | status      lista os containers
+  logs [svc]       acompanha os logs
+  php ...          php dentro do container   (food php artisan migrate)
+  artisan | a ...  php artisan               (food a migrate)
+  composer ...     composer dentro do container
+  test ...         php artisan test --compact
+  pint ...         vendor/bin/pint
+  shell            abre um sh no container app
+  mysql            abre o cliente MySQL no banco food
+HELP
+        ;;
+esac
