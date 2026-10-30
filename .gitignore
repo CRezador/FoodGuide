@@ -53,3 +53,9 @@ yarn-error.log
 .env.bak*
 .DS_Store
 Thumbs.db
+
+# Planejamento e docs do fluxo com IA (ficam só na máquina)
+/.scratch
+/docs/agents
+/docs/adr
+/GLOSSARY.md
